@@ -1,9 +1,9 @@
 <template>
   <n-config-provider :theme="isDark ? darkTheme : undefined">
     <n-message-provider>
-      <main font-sans p="x-4 y-10">
+      <main font-sans p="y-10">
         <router-view />
-        <div text="center gray-700 dark:gray-200">
+        <div text="center">
           <Footer />
         </div>
       </main>
