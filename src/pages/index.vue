@@ -1,9 +1,11 @@
 <script lang="ts" setup>
-import { isArray } from 'lodash'
-import type { FormInst } from 'naive-ui'
+import { isArray, isString } from 'lodash'
+import type { FormInst, UploadFileInfo } from 'naive-ui'
+import { useMessage } from 'naive-ui'
 
 const form = $ref<FormInst | null>(null)
-const formValue = $ref({
+const formValue = $ref<any>({
+  name: '',
   unit: {
     description: '',
     after: ['network.target'],
@@ -22,6 +24,10 @@ const formValue = $ref({
   },
 })
 const rules = {
+  name: {
+    required: true,
+    trigger: 'input',
+  },
   unit: {
     description: {
       required: true,
@@ -43,6 +49,9 @@ const serviceData = $computed(() => generate(formValue))
 function generate(data: object) {
   let service = ''
   for (const [section, sectionValue] of Object.entries(data)) {
+    if (section === 'name')
+      continue
+
     service += `[${upperFirst(section)}]\n`
     for (const [key, value] of Object.entries<string | string[]>(sectionValue)) {
       if ((isArray(value) && !value.length))
@@ -57,7 +66,17 @@ function generate(data: object) {
 }
 
 function upperFirst(name: string) {
+  if (!name)
+    return ''
+
   return name[0].toUpperCase() + name.slice(1)
+}
+
+function lowerFirst(name: string) {
+  if (!name)
+    return ''
+
+  return name[0].toLowerCase() + name.slice(1)
 }
 
 function generateValue(value: string | string[]) {
@@ -66,18 +85,88 @@ function generateValue(value: string | string[]) {
   else
     return value
 }
+
+function parse(text: string) {
+  const lines = text.split(/\r?\n/)
+  const parsedData: any = {}
+  let sectionKey = ''
+  for (let line of lines) {
+    line = line.trim()
+    if (!line)
+      continue
+
+    if (line.startsWith('[') && line.endsWith(']')) {
+      const section = lowerFirst(line.slice(1, line.length - 1))
+      parsedData[section] = {}
+      sectionKey = section
+    }
+    else {
+      // eslint-disable-next-line prefer-const
+      let [key, value] = line.split('=')
+      key = lowerFirst(key)
+      if (isString(formValue[sectionKey][key]))
+        parsedData[sectionKey][key] = lowerFirst(value)
+      else if (isArray(formValue[sectionKey][key]))
+        parsedData[sectionKey][key] = value.split(' ').map(lowerFirst)
+    }
+  }
+
+  return parsedData
+}
+
+function merge(target: any, source: any) {
+  for (const [section, sectionValue] of Object.entries<any>(target)) {
+    if (section === 'name')
+      continue
+
+    for (const key of Object.keys(sectionValue)) {
+      if (source?.[section]?.[key]) {
+        target[section][key] = source[section][key]
+      }
+      else {
+        if (isString(formValue[section][key]))
+          target[section][key] = ''
+        else
+          target[section][key] = []
+      }
+    }
+  }
+}
+
+const message = useMessage()
+async function handleChange(options: { file: UploadFileInfo }) {
+  try {
+    const text = await options.file.file?.text() as string
+    const parsedData = parse(text)
+    formValue.name = options.file.name
+    merge(formValue, parsedData)
+  }
+  catch (error) {
+    message.error('Please select a valid \'systemctl service\' file')
+  }
+}
 </script>
 
 <template>
   <div m-auto w-700px>
     <n-form ref="form" :label-width="120" label-placement="left" :model="formValue" :rules="rules">
-      <n-h2 text-center>
+      <n-form-item label="Name" path="name">
+        <div w-full flex="~ gap2">
+          <n-input v-model:value="formValue.name" flex-auto />
+          <n-upload flex-1 :default-upload="false" :show-file-list="false" @change="handleChange">
+            <n-button type="primary">
+              Select Exist
+            </n-button>
+          </n-upload>
+        </div>
+      </n-form-item>
+      <n-h2 mt-0 text-center>
         Unit
       </n-h2>
       <n-form-item label="Description" path="unit.description">
-        <n-input v-model:value="formValue.unit.description" placeholder="输入描述" />
+        <n-input v-model:value="formValue.unit.description" />
       </n-form-item>
-      <n-h2 text-center>
+      <n-h2 mt-0 text-center>
         Services
       </n-h2>
       <n-form-item path="services.type">
@@ -116,13 +205,13 @@ function generateValue(value: string | string[]) {
         />
       </n-form-item>
       <n-form-item label="WorkingDirectory" path="services.workingDirectory">
-        <n-input v-model:value="formValue.services.workingDirectory" placeholder="输入工作目录" />
+        <n-input v-model:value="formValue.services.workingDirectory" />
       </n-form-item>
       <n-form-item label="ExecStart" path="services.execStart">
-        <n-input v-model:value="formValue.services.execStart" placeholder="输入启动命令" />
+        <n-input v-model:value="formValue.services.execStart" />
       </n-form-item>
       <n-form-item label="ExecStop" path="services.execStop">
-        <n-input v-model:value="formValue.services.execStop" placeholder="输入停止命令" />
+        <n-input v-model:value="formValue.services.execStop" />
       </n-form-item>
       <n-form-item label="Restart" path="services.restart">
         <n-select
@@ -212,9 +301,9 @@ function generateValue(value: string | string[]) {
         </tbody>
       </table>
       <n-form-item label="RestartSec" path="services.restartSec">
-        <n-input v-model:value="formValue.services.restartSec" placeholder="输入重启时间间隔，不填时默认为100ms" />
+        <n-input v-model:value="formValue.services.restartSec" placeholder="default 100ms" />
       </n-form-item>
-      <n-h2 text-center>
+      <n-h2 mt-0 text-center>
         Install
       </n-h2>
       <n-form-item label="WantedBy" path="install.wantedBy">
@@ -247,6 +336,14 @@ function generateValue(value: string | string[]) {
   th,
   td {
     border: 1px solid black;
+    padding: 0 8px;
+  }
+}
+
+.dark .table {
+  th,
+  td {
+    border: 1px solid white;
     padding: 0 8px;
   }
 }
