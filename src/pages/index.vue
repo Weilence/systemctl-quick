@@ -17,12 +17,28 @@ const formValue = $ref<any>({
     execStop: '',
     restart: 'on-failure',
     restartSec: '',
+    environment: [],
   },
   install: {
     wantedBy: ['multi-user.target'],
     requiredBy: [],
   },
 })
+
+// const computetEnvironmentValue = $computed({
+//   get: () => {
+//     return formValue.services.environment.split(/\r?\n/).map((pair: any) => {
+//       const [key, value] = pair.trim().split('=')
+//       return {
+//         key: key || '', value: value || '',
+//       }
+//     })
+//   },
+//   set: (value: any[]) => {
+//     formValue.services.environment = value.map(m => `${m.key}=${m.value}`).join('\n')
+//   },
+// })
+
 const rules = {
   name: {
     required: true,
@@ -53,12 +69,18 @@ function generate(data: object) {
       continue
 
     service += `[${upperFirst(section)}]\n`
-    for (const [key, value] of Object.entries<string | string[]>(sectionValue)) {
+    for (const [key, value] of Object.entries<any | any[]>(sectionValue)) {
       if ((isArray(value) && !value.length))
         continue
       if (!isArray(value) && !value)
         continue
-      service += `${upperFirst(key)}=${generateValue(value)}\n`
+      if (key === 'environment') {
+        for (const item of value)
+          service += `${upperFirst(key)}=${generateValue(`${item.key}=${item.value}`)}\n`
+      }
+      else {
+        service += `${upperFirst(key)}=${generateValue(value)}\n`
+      }
     }
     service += '\n'
   }
@@ -102,12 +124,24 @@ function parse(text: string) {
     }
     else {
       // eslint-disable-next-line prefer-const
-      let [key, value] = line.split('=')
-      key = lowerFirst(key)
-      if (isString(formValue[sectionKey][key]))
+      const eqIndex = line.indexOf('=')
+
+      const key = lowerFirst(line.slice(0, eqIndex))
+      const value = line.slice(eqIndex + 1)
+      if (isString(formValue[sectionKey][key])) {
         parsedData[sectionKey][key] = lowerFirst(value)
-      else if (isArray(formValue[sectionKey][key]))
-        parsedData[sectionKey][key] = value.split(' ').map(lowerFirst)
+      }
+      else if (isArray(formValue[sectionKey][key])) {
+        if (key === 'environment') {
+          if (!parsedData[sectionKey][key])
+            parsedData[sectionKey][key] = []
+          const [environmentKey, environmentValue] = value.split('=')
+          parsedData[sectionKey][key].push({ key: environmentKey || '', value: environmentValue || '' })
+        }
+        else {
+          parsedData[sectionKey][key] = value.split(' ').map(lowerFirst)
+        }
+      }
     }
   }
 
@@ -302,6 +336,14 @@ async function handleChange(options: { file: UploadFileInfo }) {
       </table>
       <n-form-item label="RestartSec" path="services.restartSec">
         <n-input v-model:value="formValue.services.restartSec" placeholder="default 100ms" />
+      </n-form-item>
+      <n-form-item label="Environment" path="services.environment">
+        <n-dynamic-input
+          v-model:value="formValue.services.environment"
+          preset="pair"
+          key-placeholder="Environment Key"
+          value-placeholder="Environment Value"
+        />
       </n-form-item>
       <n-h2 mt-0 text-center>
         Install
