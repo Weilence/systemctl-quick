@@ -42,9 +42,7 @@ export default defineConfig({
 
     // https://github.com/antfu/unocss
     // see unocss.config.ts for config
-    Unocss({
-      safelist: [],
-    }),
+    Unocss(),
   ],
 
   // https://github.com/vitest-dev/vitest
