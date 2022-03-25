@@ -1,0 +1,5 @@
+<route>
+{
+    redirect: '/systemctl'
+}
+</route>
