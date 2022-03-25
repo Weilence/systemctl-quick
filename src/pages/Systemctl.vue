@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { isArray, isString } from 'lodash'
+import { isArray, isString, lowerFirst, upperFirst } from 'lodash'
 import type { FormInst, UploadFileInfo } from 'naive-ui'
 import { useMessage } from 'naive-ui'
 
@@ -25,23 +25,8 @@ const formValue = $ref<any>({
   },
 })
 
-// const computetEnvironmentValue = $computed({
-//   get: () => {
-//     return formValue.services.environment.split(/\r?\n/).map((pair: any) => {
-//       const [key, value] = pair.trim().split('=')
-//       return {
-//         key: key || '', value: value || '',
-//       }
-//     })
-//   },
-//   set: (value: any[]) => {
-//     formValue.services.environment = value.map(m => `${m.key}=${m.value}`).join('\n')
-//   },
-// })
-
 const rules = {
   name: {
-    required: true,
     trigger: 'input',
   },
   unit: {
@@ -87,20 +72,6 @@ function generate(data: object) {
   return service
 }
 
-function upperFirst(name: string) {
-  if (!name)
-    return ''
-
-  return name[0].toUpperCase() + name.slice(1)
-}
-
-function lowerFirst(name: string) {
-  if (!name)
-    return ''
-
-  return name[0].toLowerCase() + name.slice(1)
-}
-
 function generateValue(value: string | string[]) {
   if (isArray(value))
     return value.join(' ')
@@ -123,7 +94,6 @@ function parse(text: string) {
       sectionKey = section
     }
     else {
-      // eslint-disable-next-line prefer-const
       const eqIndex = line.indexOf('=')
 
       const key = lowerFirst(line.slice(0, eqIndex))
@@ -184,7 +154,7 @@ async function handleChange(options: { file: UploadFileInfo }) {
 <template>
   <div m-auto w-700px>
     <n-form ref="form" :label-width="120" label-placement="left" :model="formValue" :rules="rules">
-      <n-form-item label="Name" path="name">
+      <n-form-item label="Service Name" path="name">
         <div w-full flex="~ gap2">
           <n-input v-model:value="formValue.name" flex-auto />
           <n-upload flex-1 :default-upload="false" :show-file-list="false" @change="handleChange">
@@ -236,6 +206,7 @@ async function handleChange(options: { file: UploadFileInfo }) {
           multiple
           tag
           :options="preDefinedTarget"
+          placeholder="Please Select or Input"
         />
       </n-form-item>
       <n-form-item label="WorkingDirectory" path="services.workingDirectory">
@@ -355,6 +326,7 @@ async function handleChange(options: { file: UploadFileInfo }) {
           multiple
           tag
           :options="preDefinedTarget"
+          placeholder="Please Select or Input"
         />
       </n-form-item>
       <n-form-item label="RequiredBy" path="install.requiredBy">
@@ -364,6 +336,7 @@ async function handleChange(options: { file: UploadFileInfo }) {
           multiple
           tag
           :options="preDefinedTarget"
+          placeholder="Please Select or Input"
         />
       </n-form-item>
       <n-form-item label="Preview">
