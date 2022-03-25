@@ -1,0 +1,1 @@
+import{_ as e}from"./plugin-vue_export-helper.21dcd24c.js";import{o as t,c as o}from"./vendor.1fdd19a2.js";const r={},c={"text-lg":""};function n(_,s){return t(),o("h1",c," WIP ")}var i=e(r,[["render",n]]);export{i as default};
