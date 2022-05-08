@@ -10,7 +10,7 @@ const formValue = $ref<any>({
     description: '',
     after: ['network.target'],
   },
-  services: {
+  service: {
     type: 'simple',
     workingDirectory: '',
     execStart: '',
@@ -35,7 +35,7 @@ const rules = {
       trigger: 'input',
     },
   },
-  services: {
+  service: {
     type: {
       required: true,
       trigger: 'input',
@@ -171,9 +171,9 @@ async function handleChange(options: { file: UploadFileInfo }) {
         <n-input v-model:value="formValue.unit.description" />
       </n-form-item>
       <n-h2 mt-0 text-center>
-        Services
+        Service
       </n-h2>
-      <n-form-item path="services.type">
+      <n-form-item path="service.type">
         <template #label>
           <div inline-flex items-center>
             Type
@@ -186,7 +186,7 @@ async function handleChange(options: { file: UploadFileInfo }) {
           </div>
         </template>
         <n-select
-          v-model:value="formValue.services.type"
+          v-model:value="formValue.service.type"
           :options="[
             { label: 'simple', value: 'simple' },
             { label: 'exec', value: 'exec' },
@@ -209,18 +209,18 @@ async function handleChange(options: { file: UploadFileInfo }) {
           placeholder="Please Select or Input"
         />
       </n-form-item>
-      <n-form-item label="WorkingDirectory" path="services.workingDirectory">
-        <n-input v-model:value="formValue.services.workingDirectory" />
+      <n-form-item label="WorkingDirectory" path="service.workingDirectory">
+        <n-input v-model:value="formValue.service.workingDirectory" />
       </n-form-item>
-      <n-form-item label="ExecStart" path="services.execStart">
-        <n-input v-model:value="formValue.services.execStart" />
+      <n-form-item label="ExecStart" path="service.execStart">
+        <n-input v-model:value="formValue.service.execStart" />
       </n-form-item>
-      <n-form-item label="ExecStop" path="services.execStop">
-        <n-input v-model:value="formValue.services.execStop" />
+      <n-form-item label="ExecStop" path="service.execStop">
+        <n-input v-model:value="formValue.service.execStop" />
       </n-form-item>
-      <n-form-item label="Restart" path="services.restart">
+      <n-form-item label="Restart" path="service.restart">
         <n-select
-          v-model:value="formValue.services.restart"
+          v-model:value="formValue.service.restart"
           :options="[
             { label: 'no', value: 'no' },
             { label: 'always', value: 'always' },
@@ -305,12 +305,12 @@ async function handleChange(options: { file: UploadFileInfo }) {
           </tr>
         </tbody>
       </table>
-      <n-form-item label="RestartSec" path="services.restartSec">
-        <n-input v-model:value="formValue.services.restartSec" placeholder="default 100ms" />
+      <n-form-item label="RestartSec" path="service.restartSec">
+        <n-input v-model:value="formValue.service.restartSec" placeholder="default 100ms" />
       </n-form-item>
-      <n-form-item label="Environment" path="services.environment">
+      <n-form-item label="Environment" path="service.environment">
         <n-dynamic-input
-          v-model:value="formValue.services.environment"
+          v-model:value="formValue.service.environment"
           preset="pair"
           key-placeholder="Environment Key"
           value-placeholder="Environment Value"
